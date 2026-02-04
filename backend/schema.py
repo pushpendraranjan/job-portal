@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 
@@ -42,3 +42,30 @@ class JobResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+class AdminCreate(BaseModel):
+    name : str
+    email : EmailStr
+    password : str
+
+
+class AdminLogin(BaseModel):
+    email : EmailStr
+    password : str
+
+
+class AdminResponse(BaseModel):
+    id : int
+    name : str
+    email : EmailStr
+    level : str
+
+    class Config:
+        from_attributes = True
+
+class AdminLoginResponse(BaseModel): 
+    message: str
+    access_token: str
+    token_type: str
