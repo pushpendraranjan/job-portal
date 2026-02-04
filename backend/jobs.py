@@ -5,17 +5,18 @@ from typing import List
 from db import get_db
 from models import Job
 from schema import JobCreate, JobUpdate, JobResponse
+from security import admin_access
 router = APIRouter()
 
-
-@router.get("/get_all_jobs",response_model= List[JobResponse])
-def get_all_jobs(db: Session = Depends(get_db)):
-    jobs = db.query(Job).all()
-    return jobs
 
 @router.get("/open_jobs_user", response_model= List[JobResponse])
 def open_jobs(db:Session = Depends(get_db)):
     jobs = db.query(Job).filter(Job.is_open == True).all()
+    return jobs
+
+@router.get("/get_all_jobs",response_model= List[JobResponse])
+def get_all_jobs(db: Session = Depends(get_db), admin = Depends(admin_access)):
+    jobs = db.query(Job).all()
     return jobs
 
 @router.get("/get_by_title", response_model= List[JobResponse])
@@ -26,7 +27,7 @@ def get_by_title(title : str, db: Session = Depends(get_db)):
     return jobs
 
 @router.post("/create_job", response_model=JobResponse)
-def create_job(job: JobCreate, db: Session = Depends(get_db)):
+def create_job(job: JobCreate, db: Session = Depends(get_db), admin = Depends(admin_access)):
     new_job = Job(
         type=job.type,
         title=job.title,
@@ -45,7 +46,7 @@ def create_job(job: JobCreate, db: Session = Depends(get_db)):
     return new_job
 
 router.put ("/update_jobs", response_model= JobResponse)
-def update_job(job_id: int, job_update: JobUpdate, db: Session = Depends(get_db)):
+def update_job(job_id: int, job_update: JobUpdate, db: Session = Depends(get_db), admin = Depends(admin_access)):
     # Fetch the job from the database
     db_job = db.query(Job).filter(Job.id == job_id).first()
     if not db_job:
@@ -60,7 +61,7 @@ def update_job(job_id: int, job_update: JobUpdate, db: Session = Depends(get_db)
     return db_job
 
 @router.delete("/delete_job")
-def delete_job(job_id: int, db: Session = Depends(get_db)):
+def delete_job(job_id: int, db: Session = Depends(get_db), admin = Depends(admin_access)):
     db_job = db.query(Job).filter(Job.id == job_id).first()
     if not db_job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
