@@ -17,7 +17,7 @@ class Job(Base):
     compensation = Column(Integer, nullable=False)
     compensation_type = Column(String(50), nullable=False)  
     is_open = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)#
 
 class Admin(Base):
     __tablename__ = "admins"
