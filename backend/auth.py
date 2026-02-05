@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from db import get_db
 from models import Admin
 from schema import AdminLoginResponse, AdminCreate, AdminLogin
-from security import hash_password, verify_password, create_access_token, admin_access,super_admin
+from security import hash_password, verify_password, create_access_token,super_admin #, admin_access
 router = APIRouter()
 
 
@@ -47,7 +47,7 @@ def login_admin(admin: AdminLogin, db: Session = Depends(get_db)): #,current_adm
     if not verify_password(admin.password, db_admin.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
+            detail="Incorrect Password"
         )
 
     token = create_access_token(
