@@ -45,9 +45,9 @@ def create_job(job: JobCreate, db: Session = Depends(get_db), admin = Depends(ad
     db.refresh(new_job)
     return new_job
 
-router.put ("/update_jobs", response_model= JobResponse)
+@router.put ("/update_jobs", response_model= JobResponse)
 def update_job(job_id: int, job_update: JobUpdate, db: Session = Depends(get_db), admin = Depends(admin_access)):
-    # Fetch the job from the database
+    # Fetch job from db
     db_job = db.query(Job).filter(Job.id == job_id).first()
     if not db_job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Jobs not found")
