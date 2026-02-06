@@ -37,6 +37,9 @@ class JobUpdate(BaseModel):
     compensation: Optional[int] = None
     compensation_type: Optional[str] = None
     is_open: Optional[bool] = None
+    class Config:
+        from_attributes = True
+        # extra = "forbid"
 
 class JobResponse(BaseModel):
     id: int
