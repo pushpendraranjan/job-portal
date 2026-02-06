@@ -7,7 +7,34 @@ from schema import AdminLoginResponse, AdminCreate, AdminLogin
 from security import hash_password, verify_password, create_access_token,super_admin #, admin_access
 router = APIRouter()
 
+#
 
+# @router.put("/create-superadmin")
+# def create_admin(admin: AdminCreate ,db: Session = Depends(get_db)):   #
+#     existing_user = db.query(Admin).filter(Admin.email == admin.email).first()
+#     if existing_user:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail="Email already registered"
+#         )
+
+#     hashed_password = hash_password(admin.password)
+
+#     new_admin = Admin(
+#         name=admin.name,
+#         email=admin.email,
+#         hashed_password=hashed_password, 
+#         level="superadmin"
+#     )
+
+#     db.add(new_admin)
+#     db.commit()
+#     db.refresh(new_admin)
+
+#     return {
+#         "message":f"{new_admin.name}, is now an {new_admin.level}"
+#     }
+#
 
 @router.put("/create-admin")
 def create_admin(admin: AdminCreate ,db: Session = Depends(get_db),current_admin: Admin = Depends(super_admin)):   #
