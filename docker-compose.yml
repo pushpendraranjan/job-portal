@@ -1,8 +1,35 @@
+# version: "3.9"
+# services:
+#   postgres:
+#     image: postgres:16
+#     container_name: job_portal
+#     restart: always
+#     environment:
+#       POSTGRES_USER: company
+#       POSTGRES_PASSWORD: root
+#       POSTGRES_DB: job_portal_db
+#     ports:
+#       - "5433:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     backend:
+#       build: .
+#       continer_name: job_backend
+#       ports:
+#         -"8000:8000"
+#       depends_on:
+#         - postgres
+#       enviorment: 
+#         DATABASE_URL: postgresql://company:root@localhost:5433/job_portal_db
+
+# volumes:
+#   postgres_data:
 version: "3.9"
+
 services:
   postgres:
     image: postgres:16
-    container_name: job_portal
+    container_name: job_portal_db
     restart: always
     environment:
       POSTGRES_USER: company
@@ -13,5 +40,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  backend:
+    build: .
+    container_name: job_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://company:root@postgres:5432/job_portal_db
+
 volumes:
   postgres_data:
+
+
