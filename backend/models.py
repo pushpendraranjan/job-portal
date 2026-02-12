@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
 from datetime import datetime
-from db import Base
+from db import Base #, relationship
 
 
 class Job(Base):
@@ -18,6 +18,7 @@ class Job(Base):
     compensation_type = Column(String(50), nullable=False)  
     is_open = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)#
+    
 
 class Admin(Base):
     __tablename__ = "admins"
@@ -33,5 +34,7 @@ class Application(Base):
     id = Column(Integer, primary_key= True, index = True)
     name = Column(String(50), nullable= False)
     email = Column(String(50), nullable= False, unique= True)
-    phone_no = Column(Integer, nullable= False)
+    phone_no = Column(Integer(10), nullable= False)
     resume_url = Column(Text, nullable=False)
+    job_id = Column(Integer,ForeignKey("job_posting.id", ondelete ="CASCADE"),nullable= False)
+    applied_at = Column(DateTime, default=datetime.utcnow)#
