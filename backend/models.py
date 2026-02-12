@@ -4,7 +4,7 @@ from db import Base
 
 
 class Job(Base):
-    __tablename__ = "jobs"
+    __tablename__ = "job_posting"
 
     id = Column(Integer, primary_key=True, index=True)
     type = Column(String(50), nullable=False)  
@@ -27,3 +27,11 @@ class Admin(Base):
     hashed_password = Column(String(255), nullable= False)
     #role = Column(String(50), nullable= False, default= "admin")
     level = Column(String(50), nullable=False)
+
+class Application(Base):
+    __tablename__ = "job_application"
+    id = Column(Integer, primary_key= True, index = True)
+    name = Column(String(50), nullable= False)
+    email = Column(String(50), nullable= False, unique= True)
+    phone_no = Column(Integer, nullable= False)
+    resume_url = Column(Text, nullable=False)
