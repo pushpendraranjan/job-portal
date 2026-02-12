@@ -87,3 +87,21 @@ class AdminLoginResponse(BaseModel):
     message: str
     access_token: str
     token_type: str
+
+class ApplicantCreate(BaseModel):
+    name : str
+    email : EmailStr
+    resume_url : str
+    phone_no : int
+
+class ApplicantAdminView(BaseModel):
+    id: int
+    job_id: int
+    name: str
+    email: EmailStr
+    phone_no: str
+    resume_url: str
+    applied_at: datetime
+
+    class Config:
+        from_attributes = True
