@@ -92,14 +92,14 @@ class ApplicantCreate(BaseModel):
     name : str
     email : EmailStr
     resume_url : str
-    phone_no : int
+    phone_no : int    #string if not work  phone_no: constr(pattern=r'^(\+91)?[0-9]{10}$')
 
 class ApplicantAdminView(BaseModel):
     id: int
     job_id: int
     name: str
     email: EmailStr
-    phone_no: str
+    phone_no: int   #str
     resume_url: str
     applied_at: datetime
 
