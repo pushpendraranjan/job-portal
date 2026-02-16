@@ -3,7 +3,7 @@ import bcrypt
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import OAuth2PasswordBearer #HTTPBearer, HTTPAuthorizationCredentials,
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from db import get_db
@@ -33,12 +33,13 @@ def create_access_token(admin_id: int, level: str) -> str:
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-security = HTTPBearer()
+# security = HTTPBearer()
+security = OAuth2PasswordBearer(tokenUrl= "/auth/login-admin")
 
 def get_current_admin(
-        credentials: HTTPAuthorizationCredentials = Depends(security), db:Session = Depends(get_db)) -> Admin:
+      credentials : str = Depends(security) , db : Session = Depends(get_db)) -> Admin: #credentials: HTTPAuthorizationCredentials = Depends(security)
     try:
-        token = credentials.credentials
+        token = credentials # variables can be removed just token can be used
         payload = jwt.decode(token, SECRET_KEY, algorithms= [ALGORITHM])
 
         if payload.get("level") not in ["admin", "superadmin"]:   #["admin"]:
