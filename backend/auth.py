@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 #from typing import List
+from fastapi.security import OAuth2PasswordRequestForm
 from db import get_db
 from models import Admin
 from schema import AdminLoginResponse, AdminCreate, AdminLogin
@@ -63,8 +64,8 @@ def create_admin(admin: AdminCreate ,db: Session = Depends(get_db),current_admin
     }
 
 @router.post("/login-admin", response_model= AdminLoginResponse)
-def login_admin(admin: AdminLogin, db: Session = Depends(get_db)): #,current_admin:Admin = Depends(admin_access)
-    db_admin = db.query(Admin).filter(Admin.email == admin.email).first()
+def login_admin(admin : OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)): #,current_admin:Admin = Depends(admin_access) //admin: AdminLogin, 
+    db_admin = db.query(Admin).filter(Admin.email == admin.username).first()
     if not db_admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
