@@ -1,18 +1,36 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr, Field, model_validator
 from typing import Optional
 from datetime import datetime #, date
+from enum import Enum
+# from fastapi import HTTPException , status
+
+
+class JobMode(str,Enum):
+    remote = "Remote"
+    hybrid = "Hybrid"
+    onsite = "On-Site"
+
+class JobCompType(str, Enum):
+    stipend = "Stipend"
+    salary = "Salary"
 
 class JobCreate(BaseModel):
     type: str 
     title: str 
     description: str
-    min_experience: int
-    max_experience: int
+    min_experience: int = Field(ge= 0)
+    max_experience: int = Field(ge= 0)
     location: str 
-    mode: str 
+    mode: JobMode 
     compensation: int
-    compensation_type: str 
+    compensation_type: JobCompType 
     is_open: bool = True
+    
+    @model_validator(mode= 'after')
+    def Check(self):
+        if self.max_experience < self.min_experience:
+            raise ValueError("max_experience cannot be less than min_experience")
+        return self
 
 # class JobUpdate(BaseModel):
 #     type: Optional[str]
@@ -27,18 +45,18 @@ class JobCreate(BaseModel):
 #     is_open: Optional[bool]
 
 class JobUpdate(BaseModel):
-    type: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    min_experience: Optional[int] = None
-    max_experience: Optional[int] = None
-    location: Optional[str] = None
-    mode: Optional[str] = None
-    compensation: Optional[int] = None
-    compensation_type: Optional[str] = None
+    # type: Optional[str] = None
+    # title: Optional[str] = None
+    # description: Optional[str] = None
+    # min_experience: Optional[int] = None
+    # max_experience: Optional[int] = None
+    # location: Optional[str] = None
+    # mode: Optional[str] = None
+    # compensation: Optional[int] = None
+    # compensation_type: Optional[str] = None
     is_open: Optional[bool] = None
-    class Config:
-        from_attributes = True
+    # class Config:
+    #     from_attributes = True
         # extra = "forbid"
 
 class JobResponse(BaseModel):
@@ -92,14 +110,26 @@ class ApplicantCreate(BaseModel):
     name : str
     email : EmailStr
     resume_url : str
-    phone_no : int    #string if not work  phone_no: constr(pattern=r'^(\+91)?[0-9]{10}$')
+    phone_no : str = Field(pattern=r'^\+91\d{10}$')   #string if not work  phone_no: constr(pattern=r'^(\+91)?[0-9]{10}$')
+
+    # @field_validator (phone_no)
+    # @classmethod
+    # def Validation_Phone(cls, data):     #cls(class) is there for to check data if it fits the rules
+    #     data = data.strip()
+    #     if data.isdigit() and len(data) == 10:
+    #         return  data
+    #     else :
+    #         raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Invalid phone no")
+
 
 class ApplicantAdminView(BaseModel):
     id: int
     job_id: int
     name: str
     email: EmailStr
-    phone_no: int   #str
+    phone_no: str   #str
     resume_url: str
     applied_at: datetime
 
