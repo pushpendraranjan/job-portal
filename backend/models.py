@@ -34,7 +34,7 @@ class Application(Base):
     id = Column(Integer, primary_key= True, index = True)
     name = Column(String(50), nullable= False)
     email = Column(String(50), nullable= False, unique= True)
-    phone_no = Column(Integer, nullable= False)#strin
+    phone_no = Column(String(10), nullable= False, unique= True)#strin
     resume_url = Column(Text, nullable=False)
     job_id = Column(Integer,ForeignKey("job_posting.id", ondelete ="CASCADE"),nullable= False)
     applied_at = Column(DateTime, default=datetime.utcnow)#
