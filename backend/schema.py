@@ -135,3 +135,22 @@ class ApplicantAdminView(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+class OTPStartReq(BaseModel):
+    phone: str = Field(..., examples=["+919876543210"])
+
+
+class OTPStartRes(BaseModel):
+    message: str
+    expires_in: int
+
+
+class OTPVerifyReq(BaseModel):
+    phone: str = Field(..., examples=["+919876543210"])
+    otp: str = Field(...) #,examples=["1234"]
+
+
+class OTPVerifyRes(BaseModel):
+    message: str

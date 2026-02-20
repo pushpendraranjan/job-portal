@@ -6,6 +6,7 @@ from db import get_db
 from models import Job, Application
 from schema import JobCreate, JobUpdate, JobResponse, ApplicantAdminView, ApplicantCreate
 from security import admin_access
+from core.redis_client import redis_job
 router = APIRouter()
 
 #applicant 
@@ -49,7 +50,7 @@ def apply_applicant(
     job_id: int,
     name: str = Form(...),
     email: str = Form(...),
-    phone_no: int = Form(...),
+    phone_no: str = Form(...),
     resume: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
@@ -60,6 +61,12 @@ def apply_applicant(
             status_code=404,
             detail="Job not found or closed"
         )
+    verified_key = f"verified:{phone_no}"
+    if not redis_job.get(verified_key):
+        raise HTTPException(
+            status_code=403,
+            detail="Phone number not OTP verified"
+    )
 
     #  Upload resume to Google Drive
     resume_url = upload_to_drive(resume) #.file,# resume.filename,# resume.content_type
@@ -81,6 +88,7 @@ def apply_applicant(
 
     db.add(application)
     db.commit()
+    redis_job.delete(verified_key)
     db.refresh(application)
 
     return {
