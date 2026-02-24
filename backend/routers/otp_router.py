@@ -1,47 +1,41 @@
 import os
-from fastapi import APIRouter, HTTPException #, status
+from fastapi import APIRouter, HTTPException, status
 from schema import OTPStartReq, OTPStartRes, OTPVerifyReq, OTPVerifyRes
 from core.redis_client import redis_job
-from otp_utils import generate_otp_4, hash_otp, verify_otp, OTP_TTL_SECONDS
-from twilio_service import send_otp_whatsapp
+from utils.otp_utils import generate_otp_4, hash_otp, verify_otp, OTP_TTL_SECONDS
+from core.twilio_service import send_otp_sms
 
 # --- env ---
 OTP_SECRET = os.getenv("OTP_SECRET")
 
 router = APIRouter()#prefix="/otp", tags=["OTP"]
 
-# Redis keys:
-# otp:<phone> -> otp_hash (TTL)
-# otp_attempts:<phone> -> int attempts (TTL)
-
-
 
 @router.post("/start", response_model=OTPStartRes)
 def start_otp(payload: OTPStartReq):
     if not OTP_SECRET:
-        raise HTTPException(status_code=500, detail="OTP_SECRET missing in env")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR , detail="OTP_SECRET missing in env")
 
     phone = payload.phone.strip().replace(" ", "")
     if not phone.startswith("+"):
-        raise HTTPException(status_code=400, detail="Phone must be in E.164 format like +9198xxxx")
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Phone must be in E.164 format like +9198xxxx")
 
-    # 1) generate otp
+    
     otp = generate_otp_4()
 
-    # 2) hash otp (never store plain otp)
+    
     otp_h = hash_otp(otp, OTP_SECRET)
 
-    # 3) store in redis with TTL
+    # store in redis 
     otp_key = f"otp:{phone}"
     attempts_key = f"otp_attempts:{phone}"
     redis_job.setex(otp_key, OTP_TTL_SECONDS, otp_h)
     redis_job.setex(attempts_key, OTP_TTL_SECONDS, 0)
 
-    # 4) send via WhatsApp
+    # 4) send by sms
     try:
-        send_otp_whatsapp(phone, otp)
+        send_otp_sms(phone, otp)
     except Exception as e:
-        # if sending fails, cleanup so user can retry cleanly
         redis_job.delete(otp_key)
         redis_job.delete(attempts_key)
         raise HTTPException(status_code=502, detail=f"OTP send failed: {str(e)}")
@@ -64,7 +58,6 @@ def verify_otp_route(payload: OTPVerifyReq):
     if not otp_h:
         raise HTTPException(status_code=400, detail="OTP expired or not started")
 
-    # attempts limit (basic)
     attempts = redis_job.get(attempts_key)
     attempts_int = int(attempts) if attempts is not None else 0
     if attempts_int >= 5:
@@ -76,7 +69,7 @@ def verify_otp_route(payload: OTPVerifyReq):
         raise HTTPException(status_code=400, detail="Invalid OTP")
     
     verified_key = f"verified:{phone}"
-    redis_job.setex(verified_key, 600, "true")  # valid for 10 minutes
+    redis_job.setex(verified_key, 600, "1")  # valid for 10 minutes and returns 1
 
     # success: cleanup
     redis_job.delete(otp_key)
@@ -138,57 +131,3 @@ def verify_otp_route(payload: OTPVerifyReq):
 #         expires_in=OTP_TTL_SECONDS
 #     )
 
-
-# # ===============================
-# # Verify OTP
-# # ===============================
-# @router.post("/otp/verify", response_model=OTPVerifyRes)
-# def verify_otp_route(payload: OTPVerifyReq):
-
-#     if not OTP_SECRET:
-#         raise HTTPException(
-#             status_code=500,
-#             detail="OTP_SECRET missing in environment"
-#         )
-
-#     phone = payload.phone.strip().replace(" ", "")
-#     otp = payload.otp.strip()
-
-#     otp_key = f"otp:{phone}"
-#     attempts_key = f"otp_attempts:{phone}"
-
-#     stored_hash = redis_job.get(otp_key)
-
-#     if not stored_hash:
-#         raise HTTPException(
-#             status_code=400,
-#             detail="OTP expired or not started"
-#         )
-
-#     #  Check attempt limit
-#     attempts = redis_job.get(attempts_key)
-#     attempts_int = int(attempts) if attempts is not None else 0
-
-#     if attempts_int >= 5:
-#         raise HTTPException(
-#             status_code=429,
-#             detail="Too many attempts. Try again later."
-#         )
-
-#     #  Verify OTP
-#     is_valid = verify_otp(otp, stored_hash, OTP_SECRET)
-
-#     if not is_valid:
-#         redis_job.incr(attempts_key)
-#         raise HTTPException(
-#             status_code=400,
-#             detail="Invalid OTP"
-#         )
-
-#     #  Cleanup on success
-#     redis_job.delete(otp_key)
-#     redis_job.delete(attempts_key)
-
-#     return OTPVerifyRes(
-#         message="OTP verified successfully"
-#     )
